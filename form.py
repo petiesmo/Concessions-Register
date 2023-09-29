@@ -3,8 +3,12 @@
 import streamlit as st
 import streamlit_pydantic as sp
 
-from models import Project
+from .models import Project, Customer
 
-data = sp.pydantic_form(key="my_form", model=Project)
-if data:
-    st.json(data.json())
+customer = sp.pydantic_form(key="customer_form", model=Customer)
+if customer:
+    st.json(customer.json())
+
+project = sp.pydantic_form(key="my_form", model=Project)
+if project:
+    st.json(project.json())

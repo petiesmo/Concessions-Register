@@ -1,0 +1,6 @@
+fastapi
+pydantic
+sqlmodel
+streamlit
+streamlit_pydantic
+uvicorn

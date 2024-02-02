@@ -1,7 +1,7 @@
 #app.py
 from sqlmodel import SQLModel, create_engine, Session
 
-from .models import Project, Customer
+from models import Project, Customer
 
 #-- CRUD app
 sqlite_file_name = r'C:\Users\pjsmole\Documents\Github\crudform\database4.db'

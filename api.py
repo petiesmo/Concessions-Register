@@ -2,9 +2,10 @@
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
 
-from sqlmodel import Field, Session, SQLModel, create_engine, select
+from sqlmodel import Field, Session, SQLModel, create_engine
+from sqlmodel import select as sqlselect
 
-from .models import Project
+from models import Project, ProjectShort, ProjectCreate, ProjectUpdate
 
 #--- Database
 sqlite_file_name = "database.db"
@@ -39,13 +40,13 @@ def create_project(project: Project):
 @app.get("/projects/")
 def read_projects(responsee_model=ProjectShort):
     with Session(engine) as session:
-        projects = session.exec(select(Project)).all()
+        projects = session.exec(sqlselect(Project)).all()
         return projects
 
 @app.get("/projects/{project_id}")
-def read_projects():
+def read_projects(project_id: int):
     with Session(engine) as session:
-        projects = session.exec(select(Project)).one(_id = project_id)
+        projects = session.exec(sqlselect(Project)).one(_id = project_id)
     return projects
 
 @app.patch("/projects/{project_id}", response_model=ProjectShort)

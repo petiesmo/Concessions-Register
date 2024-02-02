@@ -3,7 +3,7 @@
 import streamlit as st
 import streamlit_pydantic as sp
 
-from .models import Project, Customer
+from models import Project, Customer
 
 customer = sp.pydantic_form(key="customer_form", model=Customer)
 if customer:

@@ -7,7 +7,7 @@ from typing import Optional
 from pydantic import EmailStr
 from sqlmodel import Field, SQLModel
 
-
+#--- CUSTOMER Class Options
 class CustomerBase(SQLModel, table=False):
     name: str = Field(index=True)
     email: EmailStr = Field(index=True)
@@ -38,7 +38,7 @@ class SType(Enum):
     BC = 'Border Corner'
     CBW = 'Custom Block Work'
 
-
+#--- PROJECT Class Options
 class ProjectBase(SQLModel, table=False):
     date_submit: datetime = Field(default_factory=datetime.today())
     date_needed: datetime = Field(default_factory=datetime.today())

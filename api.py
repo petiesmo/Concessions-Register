@@ -2,6 +2,7 @@
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
 
+import sqlmodel
 from sqlmodel import Field, Session, SQLModel, create_engine
 from sqlmodel import select as sqlselect
 
@@ -20,15 +21,14 @@ def create_db_and_tables():
 
 
 #-- CRUD app
-
 app = FastAPI()
-
+#TODO: Convert to using Routers
 
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
 
-
+#-- CREATE
 @app.post("/projects/")
 def create_project(project: Project):
     with Session(engine) as session:
@@ -37,28 +37,43 @@ def create_project(project: Project):
         session.refresh(project)
         return project
 
-@app.get("/projects/")
-def read_projects(responsee_model=ProjectShort):
+#-- READ
+@app.get("/projects/", response_model=ProjectShort)
+def read_projects():
     with Session(engine) as session:
         projects = session.exec(sqlselect(Project)).all()
         return projects
 
-@app.get("/projects/{project_id}")
-def read_projects(project_id: int):
+@app.get("/projects/{project_id}", response_model=ProjectShort)
+def read_project(project_id: int):
     with Session(engine) as session:
-        projects = session.exec(sqlselect(Project)).one(_id = project_id)
-    return projects
+        project = session.get(Project, project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+    return project
 
+#-- UPDATE
 @app.patch("/projects/{project_id}", response_model=ProjectShort)
 def update_project(project_id: int, project: ProjectUpdate):
     with Session(engine) as session:
-        db_project = session.get(Project, project_id)
-        if not db_project:
+        project = session.get(Project, project_id)
+        if not project:
             raise HTTPException(status_code=404, detail="Project not found")
         project_data = project.dict(exclude_unset=True)
         for key, value in project_data.items():
-            setattr(db_project, key, value)
-        session.add(db_project)
+            setattr(project, key, value)
+        session.add(project)
         session.commit()
-        session.refresh(db_project)
-        return db_project
+        session.refresh(project)
+        return project
+
+#-- DELETE
+@app.delete("/projects/{project_id}")
+def delete_project(project_id: int):
+    with Session(engine) as session:
+        project = session.get(Project, project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        session.delete(project)
+        session.commit()
+        return {'ok': f'deleted Project {project_id}'}

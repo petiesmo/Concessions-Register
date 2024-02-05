@@ -1,6 +1,7 @@
 fastapi
 httpx
 pydantic
+pydantic[email]
 sqlmodel
 streamlit
 streamlit_pydantic

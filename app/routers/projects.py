@@ -1,35 +1,9 @@
-#api.py
-from fastapi import FastAPI
-from fastapi.exceptions import HTTPException
+from fastapi import APIRouter
 
-import sqlmodel
-from sqlmodel import Field, Session, SQLModel, create_engine
-from sqlmodel import select as sqlselect
-
-from models import Project, ProjectShort, ProjectCreate, ProjectUpdate
-
-#--- Database
-sqlite_file_name = "database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-
-connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_url, echo=True, connect_args=connect_args)
-
-
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
-
-
-#-- CRUD app
-app = FastAPI()
-#TODO: Convert to using Routers
-
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
+router = APIRouter()
 
 #-- CREATE
-@app.post("/projects/")
+@router.post("/projects/")
 def create_project(project: Project):
     with Session(engine) as session:
         session.add(project)
@@ -38,13 +12,13 @@ def create_project(project: Project):
         return project
 
 #-- READ
-@app.get("/projects/", response_model=ProjectShort)
+@router.get("/projects/", response_model=ProjectShort)
 def read_projects():
     with Session(engine) as session:
         projects = session.exec(sqlselect(Project)).all()
         return projects
 
-@app.get("/projects/{project_id}", response_model=ProjectShort)
+@router.get("/projects/{project_id}", response_model=ProjectShort)
 def read_project(project_id: int):
     with Session(engine) as session:
         project = session.get(Project, project_id)
@@ -53,7 +27,7 @@ def read_project(project_id: int):
     return project
 
 #-- UPDATE
-@app.patch("/projects/{project_id}", response_model=ProjectShort)
+@router.patch("/projects/{project_id}", response_model=ProjectShort)
 def update_project(project_id: int, project: ProjectUpdate):
     with Session(engine) as session:
         project = session.get(Project, project_id)
@@ -68,7 +42,7 @@ def update_project(project_id: int, project: ProjectUpdate):
         return project
 
 #-- DELETE
-@app.delete("/projects/{project_id}")
+@router.delete("/projects/{project_id}")
 def delete_project(project_id: int):
     with Session(engine) as session:
         project = session.get(Project, project_id)

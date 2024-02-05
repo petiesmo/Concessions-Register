@@ -5,12 +5,13 @@ from uuid import uuid1
 from typing import Optional
 
 from pydantic import EmailStr
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, AutoString
 
+"""
 #--- CUSTOMER Class Options
 class CustomerBase(SQLModel, table=False):
     name: str = Field(index=True)
-    email: EmailStr = Field(index=True)
+    email: EmailStr = Field(unique=True, index=True, sa_type=AutoString)
     phone: str = Field()
     #projects: list[str] = []
 
@@ -74,3 +75,4 @@ class ProjectUpdate(ProjectBase):
     customer_id: str
     date_submit: datetime
     date_needed: datetime
+"""

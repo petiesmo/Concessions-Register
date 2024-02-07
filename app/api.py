@@ -2,10 +2,13 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Depends, HTTPException
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+
 
 import app.db.core as db
 from app.routers import items #, customers, projects
-
+from app.routers.limiter import limiter
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -24,6 +27,10 @@ app = FastAPI(lifespan=lifespan, dependencies=[])
 app.include_router(items.router)
 #app.include_router(stuff.router)
 #app.include_router(projects.router)
+
+app.state.limiter = limiter
+#app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+#TODO: investigate why above doesn't work: https://github.com/ArjanCodes/examples/blob/main/2023/fastapi-router/api/main.py
 
 
 def main():

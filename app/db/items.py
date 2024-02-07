@@ -1,18 +1,20 @@
 #app/db/items.py
 #Database functions for the items table
-
+#Good template for other types of items
+#%%
 from sqlmodel import Session
 from sqlmodel import select as sqlselect
 
-from app.models.item import Item, ItemShort, ItemCreate, ItemUpdate
+from app.models.models import Item, ItemShort, ItemCreate, ItemUpdate
 from .core import NotFoundError
 
 
-def create_item(session:Session, item: ItemCreate):
-    session.add(item)
+def create_item(session:Session, item: ItemCreate) -> Item:
+    db_item = Item.model_validate(item)
+    session.add(db_item)
     session.commit()
-    session.refresh(item)
-    return item
+    session.refresh(db_item)
+    return db_item
 
 
 def read_items(session:Session, offset: int=0, limit: int=100):
@@ -48,3 +50,4 @@ def delete_item(session:Session, item_id: int):
     session.delete(item_in_db)
     session.commit()
     return True
+# %%

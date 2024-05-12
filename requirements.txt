@@ -1,5 +1,11 @@
 fastapi
+httpx
 pydantic
+pydantic[email]
+pydantic-settings
+pytest
+python-dotenv
+slowapi
 sqlmodel
 streamlit
 streamlit_pydantic

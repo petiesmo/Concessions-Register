@@ -1,76 +1,64 @@
-#models.py
-from datetime import datetime
-from enum import Enum
-from uuid import uuid1
-from typing import Optional
+#models/item.py
+#Good template: can be replicated for other item types
+from typing import List, Optional
 
 from pydantic import EmailStr
-from sqlmodel import Field, SQLModel
+from sqlmodel import SQLModel, Field, Relationship, AutoString
 
-
-class CustomerBase(SQLModel, table=False):
+#--- GROUP (generic group of Items) Class Options
+#Ref: Teams: https://sqlmodel.tiangolo.com/tutorial/fastapi/teams/
+class GroupBase(SQLModel, table=False):
     name: str = Field(index=True)
-    email: EmailStr = Field(index=True)
-    phone: str = Field()
-    #projects: list[str] = []
+    param2: str
 
-class Customer(CustomerBase, table=True, extend_existing=True):
+class Group(GroupBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    items: List['Item'] = Relationship(back_populates='group')
 
-class CustomerCreate(CustomerBase):
+class GroupCreate(GroupBase):
     pass
 
-class CustomerRead(CustomerBase):
+class GroupRead(GroupBase):
     id: str
 
-class CustomerShort(CustomerBase):
+class GroupShort(GroupBase):
+    group_id: str
+    name: str
+
+class GroupUpdate(GroupBase):
+    group_id: str
+    item_id: str
+    name: Optional[str] = None
+    param2: Optional[str] = None
+
+    
+#--- ITEM (generic) Class Options 
+class ItemBase(SQLModel, table=False):
+    name: str = Field(index=True)
+    email: EmailStr = Field(unique=True, index=True, sa_type=AutoString)
+    phone: str = Field()
+    group_id: Optional[int] = Field(default=None, foreign_key='group.id')
+#Autostring ref: https://github.com/tiangolo/sqlmodel/discussions/730
+
+class Item(ItemBase, table=True, extend_existing=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    group: Optional[Group] = Relationship(back_populates='items')
+    param1: Optional[str] = ''
+
+class ItemCreate(ItemBase):
+    pass
+
+class ItemRead(ItemBase):
+    id: str
+
+class ItemShort(ItemBase):
     id: str
     name: str
     
-class CustomerUpdate(CustomerBase):
-    customer_id: str
-    date_submit: datetime
-    date_needed: datetime
+class ItemUpdate(ItemBase):
+    item_id: str
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    group_id: Optional[int] = None
 
-
-class SType(Enum):
-    E2E = 'Edge to Edge'
-    BC = 'Border Corner'
-    CBW = 'Custom Block Work'
-
-
-class ProjectBase(SQLModel, table=False):
-    date_submit: datetime = Field(default_factory=datetime.today())
-    date_needed: datetime = Field(default_factory=datetime.today())
-    customer: Optional[int] = Field(default=None, foreign_key="customer.id")
-    height:int = Field(default=50, gt=0)
-    width:int = Field(default=50, gt=0)
-    hborder:int = Field(default=0, ge=0)
-    wborder:int = Field(default=0, ge=0)
-    stype:SType = Field(default=SType.E2E)
-    border_corner:bool = Field(default=False)
-    binding:bool = Field(default=False)
-
-    @property
-    def estimated_cost(self):
-        return 1
-
-class Project(ProjectBase, table=True, extend_existing=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-
-class ProjectCreate(ProjectBase):
-    pass
-
-class ProjectRead(ProjectBase):
-    id: str
-
-class ProjectShort(ProjectBase):
-    id: str
-    customer_id: str
-    date_submit: datetime
-    date_needed: datetime
-    
-class ProjectUpdate(ProjectBase):
-    customer_id: str
-    date_submit: datetime
-    date_needed: datetime

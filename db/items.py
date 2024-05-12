@@ -5,7 +5,7 @@
 from sqlmodel import Session
 from sqlmodel import select as sqlselect
 
-from app.models.models import Item, ItemShort, ItemCreate, ItemUpdate
+from api.models.models import Item, ItemShort, ItemCreate, ItemUpdate
 from .core import NotFoundError
 
 

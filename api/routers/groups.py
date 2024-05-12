@@ -7,10 +7,9 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
-from app.models.models import Group, GroupShort, GroupCreate, GroupUpdate
-import app.db.core as db_core
-import app.db.groups as db
-from .limiter import limiter
+from api.models.models import Group, GroupShort, GroupCreate, GroupUpdate
+import ..db.core as db_core
+import ..db.groups as db
 
 
 router = APIRouter(
@@ -22,7 +21,6 @@ router = APIRouter(
 
 #-- CREATE
 @router.post("/", response_model=GroupShort)
-@limiter.limit("1/second")
 def create_group(group: GroupCreate, session:Session = Depends(db_core.get_session)):
     try:
         db.create_group(session, group)
@@ -33,13 +31,11 @@ def create_group(group: GroupCreate, session:Session = Depends(db_core.get_sessi
 
 #-- READ
 @router.get("/", response_model=List[GroupShort])
-@limiter.limit("1/second")
 def read_groups(offset: int=0, limit: int=Query(default=100, le=100), session:Session = Depends(db_core.get_session)):
     groups = db.read_groups(session, offset, limit)
     return groups
 
 @router.get("/{group_id}", response_model=GroupShort)
-@limiter.limit("1/second")
 def read_group(group_id: int, session:Session = Depends(db_core.get_session)):
     group = session.get(Group, group_id)
     if not group:
@@ -49,7 +45,6 @@ def read_group(group_id: int, session:Session = Depends(db_core.get_session)):
 
 #-- UPDATE
 @router.patch("/{group_id}", response_model=GroupShort)
-@limiter.limit("1/second")
 def update_group(group_id: int, group: GroupUpdate, session:Session = Depends(db_core.get_session)):
     try:
         updated_group = db.update_group(session, group_id, group)
@@ -60,7 +55,6 @@ def update_group(group_id: int, group: GroupUpdate, session:Session = Depends(db
 
 #-- DELETE
 @router.delete("/{group_id}")
-@limiter.limit("1/second")
 def delete_group(group_id: int, session:Session = Depends(db_core.get_session)):
     try:
         db.delete_group(session, group_id)

@@ -7,10 +7,9 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
-from app.models.models import Item, ItemShort, ItemCreate, ItemUpdate
-import app.db.core as db_core
-import app.db.items as db
-from .limiter import limiter
+from api.models.models import Item, ItemShort, ItemCreate, ItemUpdate
+import api.db.core as db_core
+import api.db.items as db
 
 
 router = APIRouter(
@@ -20,9 +19,14 @@ router = APIRouter(
     responses={404: {'description': 'Not found'}}
 )
 
+@router.get("/", response_model=form.Item)
+async def return_html_form():
+    basic_screen = "<html><body><h1>The Most Basic items ever</h1></body></html>"
+    return basic_screen
+
+
 #-- CREATE
 @router.post("/", response_model=ItemShort)
-@limiter.limit("1/second")
 def create_item(item: ItemCreate, session:Session = Depends(db_core.get_session)):
     try:
         db.create_item(session, item)
@@ -32,14 +36,12 @@ def create_item(item: ItemCreate, session:Session = Depends(db_core.get_session)
 
 
 #-- READ
-@router.get("/", response_model=List[ItemShort])
-@limiter.limit("1/second")
+@router.get("/all", response_model=List[ItemShort])
 def read_items(offset: int=0, limit: int=Query(default=100, le=100), session:Session = Depends(db_core.get_session)):
     items = db.read_items(session, offset, limit)
     return items
 
 @router.get("/{item_id}", response_model=ItemShort)
-@limiter.limit("1/second")
 def read_item(item_id: int, session:Session = Depends(db_core.get_session)):
     item = session.get(Item, item_id)
     if not item:
@@ -49,7 +51,6 @@ def read_item(item_id: int, session:Session = Depends(db_core.get_session)):
 
 #-- UPDATE
 @router.patch("/{item_id}", response_model=ItemShort)
-@limiter.limit("1/second")
 def update_item(item_id: int, item: ItemUpdate, session:Session = Depends(db_core.get_session)):
     try:
         updated_item = db.update_item(session, item_id, item)
@@ -60,7 +61,6 @@ def update_item(item_id: int, item: ItemUpdate, session:Session = Depends(db_cor
 
 #-- DELETE
 @router.delete("/{item_id}")
-@limiter.limit("1/second")
 def delete_item(item_id: int, session:Session = Depends(db_core.get_session)):
     try:
         db.delete_item(session, item_id)

@@ -1,15 +1,16 @@
 #app/db/items.py
 #Database functions for the items table
-#Good template for other types of items
-#%%
+#Good template for other types of items/groups
+from typing import List
+
 from sqlmodel import Session
 from sqlmodel import select as sqlselect
 
-from api.models.models import Item, ItemShort, ItemCreate, ItemUpdate
+from models import Item, ItemShort, ItemCreate, ItemUpdate
 from .core import NotFoundError
 
 
-def create_item(session:Session, item: ItemCreate) -> Item:
+def create_one_item(session:Session, item: ItemCreate) -> Item:
     db_item = Item.model_validate(item)
     session.add(db_item)
     session.commit()
@@ -17,7 +18,20 @@ def create_item(session:Session, item: ItemCreate) -> Item:
     return db_item
 
 
-def read_items(session:Session, offset: int=0, limit: int=100):
+def create_many_items(session:Session, items: List[ItemCreate]) -> List[Item]:
+    new_items = list()
+    for item in items:
+        db_item = Item.model_validate(item)
+        new_items.append(db_item)
+        session.add(db_item)
+    session.commit()
+
+    for nc in new_items:
+        session.refresh(nc)
+    return new_items
+
+
+def read_all_items(session:Session, offset: int=0, limit: int=100):
     items = session.exec(sqlselect(Item).offset(offset).limit(limit)).all()
     return items
 
@@ -50,4 +64,3 @@ def delete_item(session:Session, item_id: int):
     session.delete(item_in_db)
     session.commit()
     return True
-# %%

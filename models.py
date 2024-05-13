@@ -114,7 +114,7 @@ class ItemBase(SQLModel, table=False):
     name: str = Field(nullable=False)
     description: Optional[str]
     price: float = Field(default=0.00, nullable=False)
-    qty: float = 0
+    qty: float = Field(default=0.00, nullable=False)
 #Autostring ref: https://github.com/tiangolo/sqlmodel/discussions/730
 
 class Item(ItemBase, table=True, extend_existing=True):

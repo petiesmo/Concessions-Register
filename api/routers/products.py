@@ -1,18 +1,18 @@
-#router/customers.py
+#router/products.py
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import HTMLResponse
 from sqlmodel import Session
 
-from db.models import Customer, CustomerCreate, CustomerUpdate, CustomerShort, CustomerRead
+from db.models import Product, ProductCreate, ProductRead, ProductUpdate, ProductShort
 from db.core import get_session
 from db.db_ops import CRUDBase
 
-items = CRUDBase(Customer)
+items = CRUDBase(Product)
 router = APIRouter(
-    prefix='/customers',
-    tags=['customers'],
+    prefix='/products',
+    tags=['products'],
     dependencies=[],
     responses={
         400: {'description': 'Bad request. Record not created/updated'},
@@ -21,13 +21,13 @@ router = APIRouter(
 
 @router.get("")
 def return_html_form():
-    basic_screen = HTMLResponse("<html><body><h1>The Most Basic People ever</h1></body></html>")
+    basic_screen = HTMLResponse("<html><body><h1>The Most Basic Products ever</h1></body></html>")
     return basic_screen
 
 
 #-- CREATE
-@router.post("/", response_model=CustomerShort)
-def create_item(data: CustomerCreate, session:Session = Depends(get_session)):
+@router.post("/", response_model=ProductShort)
+def create_item(data: ProductCreate, session:Session = Depends(get_session)):
     try:
         item = items.create_one(session, data)
     except Exception as e:
@@ -36,13 +36,13 @@ def create_item(data: CustomerCreate, session:Session = Depends(get_session)):
 
 
 #-- READ
-@router.get("/all", response_model=List[CustomerShort])
+@router.get("/all", response_model=List[ProductShort])
 def read_items(offset: int=0, limit: int=Query(default=100, le=100), session:Session = Depends(get_session)):
     records = items.read_all(session, offset, limit)
     return records
 
 
-@router.get("/{item_id}", response_model=CustomerRead)
+@router.get("/{item_id}", response_model=ProductRead)
 def read_item(item_id: int, session:Session = Depends(get_session)):
     try:
         record = items.read_one(session, item_id)
@@ -54,8 +54,8 @@ def read_item(item_id: int, session:Session = Depends(get_session)):
 
 
 #-- UPDATE
-@router.patch("/{item_id}", response_model=CustomerShort)
-def update_item(item_id: int, data: CustomerUpdate, session:Session = Depends(get_session)):
+@router.patch("/{item_id}", response_model=ProductRead)
+def update_item(item_id: int, data: ProductUpdate, session:Session = Depends(get_session)):
     try:
         updated_item = items.update_one(session, item_id, data)
     except Exception as e:

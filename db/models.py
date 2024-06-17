@@ -126,7 +126,10 @@ class ProductUpdate(SQLModel):
     price: float | None = None
     description: str | None = None
     qty: float | None = None
+    emoji: str | None = None
 
+
+#--- Transaction SubClasses ---
 class Payment(BaseModel):
     coupon: float = 0.00
     cash: float = 0.00
@@ -165,11 +168,11 @@ class Transaction(BaseSQLModel, TxCreate, table=True, extend_existing=True):
 
 
 class TxRead(TxCreate):
-    id: str
+    id: int
 
 
 class TxShort(TxBase):
-    id: str
+    id: int
 
 
 class TxUpdate(SQLModel):

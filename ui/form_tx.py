@@ -168,10 +168,8 @@ def main_form(customers:List[Customer], merch:List[Product]):
         st.session_state.cart = list()
     cart = st.session_state.cart
 
-    # Select customer
-    with st.sidebar:
-        line_item = select_item(merch)
 
+    # Select customer &
     # Display customer details
     colA, colB, colC = st.columns([.5,.1,.4])
     with colA:
@@ -183,6 +181,9 @@ def main_form(customers:List[Customer], merch:List[Product]):
         st.write(f"Account Balance: $***{selected_customer.acct_balance:.2f}***")     
     st.divider()
 
+    with st.popover('Other items'):
+        line_item = select_item(merch)
+    
     q_line_item = quick_select_item(merch)
     #Display cart and register details
     col1, col2, col3 = st.columns([.5,.1,.4])
@@ -236,6 +237,7 @@ if __name__ == "__main__":
 2. Multipage (admin)
 2a. Merge management
 2b. Customer management
-2c. Checkout'''
+2c. **How to add cash to account
+2d. Checkout'''
 
 

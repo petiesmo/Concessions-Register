@@ -29,7 +29,9 @@ def return_html_form():
 @router.post("/", response_model=ProductShort)
 def create_item(data: ProductCreate, session:Session = Depends(get_session)):
     try:
-        item = items.create_one(session, data)
+        item_dict = data.model_dump()
+        print(f'Received new item: {item_dict}')
+        item = items.create_one(session, item_dict)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from e
     return item

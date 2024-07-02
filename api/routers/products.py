@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import HTMLResponse
 from sqlmodel import Session
 
-from db.models import Product, ProductCreate, ProductRead, ProductUpdate, ProductShort
-from db.core import get_session
-from db.db_ops import CRUDBase
+from ...db.models import Product, ProductCreate, ProductRead, ProductUpdate, ProductShort
+from ...db.core import get_session
+from ...db.db_ops import CRUDBase
 
 items = CRUDBase(Product)
 router = APIRouter(
@@ -38,7 +38,7 @@ def create_item(data: ProductCreate, session:Session = Depends(get_session)):
 
 
 #-- READ
-@router.get("/all", response_model=List[ProductShort])
+@router.get("/all", response_model=List[ProductRead])
 def read_items(offset: int=0, limit: int=Query(default=100, le=100), session:Session = Depends(get_session)):
     records = items.read_all(session, offset, limit)
     return records

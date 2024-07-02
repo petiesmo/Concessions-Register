@@ -2,12 +2,12 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from sqlmodel import Session
 
-from db.models import Customer, CustomerCreate, CustomerUpdate, CustomerShort, CustomerRead
-from db.core import get_session
-from db.db_ops import CRUDBase
+from ...db.models import Customer, CustomerCreate, CustomerUpdate, CustomerShort, CustomerRead
+from ...db.core import get_session
+from ...db.db_ops import CRUDBase
 
 items = CRUDBase(Customer)
 router = APIRouter(
@@ -26,7 +26,7 @@ def return_html_form():
 
 
 #-- CREATE
-@router.post("/", response_model=CustomerShort)
+@router.post("/")
 def create_item(data: CustomerCreate, session:Session = Depends(get_session)):
     try:
         item_dict = data.model_dump()
@@ -34,7 +34,7 @@ def create_item(data: CustomerCreate, session:Session = Depends(get_session)):
         item = items.create_one(session, item_dict)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from e
-    return item
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content={'message': f'Customer {item.id} created successfully', 'new_customer_id': item.id})
 
 
 #-- READ

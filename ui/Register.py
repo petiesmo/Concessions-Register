@@ -9,11 +9,8 @@ import httpx
 import pandas as pd
 import streamlit as st
 from streamlit_extras.grid import grid
+import streamlit.components.v1 as components
 
-#from db.models import CustomerCreate
-#from db.models import ProductCreate
-#from db.models import TxCreate
-#from db.models import LineItem, Payment
 st.set_page_config(
     page_title="Concessions Cash Register",
     page_icon="💵",
@@ -21,8 +18,15 @@ st.set_page_config(
     initial_sidebar_state="collapsed"    #, menu_items=[]
     )
 ss = st.session_state
-ss
 
+
+def cbk():
+    '''Workaround to help set focus on the customer dropdown'''
+    st.session_state['counter'] += 1
+
+if 'counter' not in st.session_state:
+    st.session_state['counter'] = 0
+ 
 # Helper functions to fetch customers from the database
 @st.cache_data
 def get_customers() -> List[dict]:
@@ -30,12 +34,6 @@ def get_customers() -> List[dict]:
     if res.status_code == 200:
         return res.json()   #[Customer(**x) for x in res.json()]
     return {'Error':'No customers retrieved'}
-    '''customers = [   
-        CustomerCreate(id=997, name='Johnny Depp (Fake!)'),
-        CustomerCreate(id=998, name='Sandra Bullock (Fake!)', staff=True, acct_balance=10.00),
-        CustomerCreate(id=999, name='Donald Trump (Fake!)', acct_balance=1000.00)
-    ]
-    return customers'''
 
 
 # Helper function to fetch items from the database
@@ -45,13 +43,6 @@ def get_products() -> List[dict]:
     if res.status_code == 200:
         return res.json()   #[Product(**x) for x in res.json()]
     return {'Error':'No products retrieved'}
-    '''fake_products = [   
-            ProductCreate(id=997, name='Candy Bar (FAKE!)', price=0.75, emoji='🍫'),
-            ProductCreate(id=998, name='Slushie (Fake!)', price=1.00, emoji='🍦'),
-            ProductCreate(id=999, name='Soda (Fake!)', price=1.00, emoji='🥤'),
-            ProductCreate(id=996, name='Popcorn (Fake!)', price=0.50, emoji='🍿')
-        ]
-    return fake_products'''
 
 
 # Customer Selection
@@ -60,7 +51,14 @@ def format_customer(cst):
 
 def select_customer(customers):
     # Select customer from database list (searchable)
-    selected_customer = st.selectbox("Customer (type to search)", customers, format_func=format_customer)
+    selected_customer = st.selectbox(
+        label="Customer (type to search)",
+        key="session_customer",
+        options=customers,
+        index=None,
+        placeholder='Select/Search a Customer',
+        format_func=format_customer,
+        on_change=cbk)
     ss.customer = selected_customer
     return selected_customer
 
@@ -69,8 +67,9 @@ def Customer_Section(customers):
     with colA:
         selected_customer = select_customer(customers)
     with colB:
-        st.write('Customer Acct Balance: ')
-        st.markdown(f"{selected_customer['name']} &ensp;| &ensp; $***{selected_customer['acct_balance']:.2f}***")
+        if selected_customer:
+            st.write('Customer Acct Balance: ')
+            st.markdown(f"{selected_customer['name']} &ensp;| &ensp; $***{selected_customer['acct_balance']:.2f}***")
 
 
 # Merchandise Selection
@@ -175,15 +174,15 @@ def Register_Section():
         col2a,col2b = col2.columns(2)
         with col2a:
             payment = payment_options(total)
-            projected_balance = cst['acct_balance'] - payment['account']
+            if cst: projected_balance = cst['acct_balance'] - payment['account']
         with col2b:
             tx_note = st.text_input('Note')
             ss.tx_note = tx_note
-            st.markdown(f"Projected Balance: ${formatted_balance(projected_balance)}")
+            if cst: st.markdown(f"Projected Balance: ${formatted_balance(projected_balance)}")
     
 
     tx_saved = False
-    if total > 0:
+    if cst and total > 0:
         if sum(payment.values()) == total:
             if total > cst['acct_balance']:
                 col2b.write("Insufficient Account Balance.  Add cash or reduce items.")
@@ -221,7 +220,7 @@ def clear_session_state_and_rerun():
 # Main function
 def main_form():    #customers:List[Customer], merch:List[Product]):
     st.title('💵 Concessions Cash Register')
-
+    
     # Select customer & Display customer details
     Customer_Section(ss.customers)
     st.divider()
@@ -239,6 +238,20 @@ def main_form():    #customers:List[Customer], merch:List[Product]):
         # Reload the page
         clear_session_state_and_rerun()
 
+    components.html(
+        f"""
+            <div></div>
+            <p style="color:white;">{st.session_state.counter}</p>
+            <script>
+                var input = window.parent.document.querySelectorAll("input[role=combobox]");
+
+                for (var i = 0; i < input.length; ++i) {{
+                    input[i].focus();
+                }}
+        </script>
+        """,
+        height=150
+    )
 
 
 if __name__ == "__main__":
@@ -246,29 +259,5 @@ if __name__ == "__main__":
     ss.customers = get_customers()
     ss.merch = get_products()
     main_form()
-
-'''Fixes needed:
-X 1. Fix floating error on Acct Balance
-2. Reset all elements during st.rerun (dump session state)'''
-
-'''Ideas:
-XX 0. Hot Buttons / Cards
-0. SET FOCUS TO PERSON
-XX Lookup by badge ID
-1. Item lookup by SKU
-XX 2. Multipage (admin area?)
-XX 2a. Merch management
-XX 2b. Customer management
-2c. **How to add cash to someone's account (AddFunds Tx type?)
-2d. Checkout
-1. Recent transactions - opportunity to do a refund?
-_. User sign-in (Admin)?  Register ID?
-FLAG ALLERGIES?
-TILL Information - (Till# (MacAddress?), Cashier name, Cash In/Out, Tx List)
-SETTINGS - allow_price_edits, allow_discounts
-LOGS - API log, UI log, DB log?
-TESTING - Mock API response
-'''
-
 
 

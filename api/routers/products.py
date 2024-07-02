@@ -2,7 +2,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from sqlmodel import Session
 
 from ...db.models import Product, ProductCreate, ProductRead, ProductUpdate, ProductShort
@@ -34,7 +34,7 @@ def create_item(data: ProductCreate, session:Session = Depends(get_session)):
         item = items.create_one(session, item_dict)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from e
-    return item
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content={'message': f'Product {item.id} created successfully', 'new_product_id': item.id})
 
 
 #-- READ

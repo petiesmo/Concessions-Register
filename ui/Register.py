@@ -197,7 +197,7 @@ def Register_Section():
                     'note': tx_note
                     }
                     tx_saved = save_transaction(tx_data)
-    col2b.button('RESET', on_click=clear_session_state_and_rerun)
+    if col2b.button('RESET'): clear_session_state_and_rerun()
     return tx_saved
 
 def save_transaction(tx): #TxCreate):

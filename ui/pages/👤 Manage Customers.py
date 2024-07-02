@@ -11,7 +11,6 @@ import streamlit as st
 
 #from db.models import CustomerCreate
 ss = st.session_state
-ss
 
 # Helper functions to fetch customers from the database
 def get_customers() -> List[dict]:

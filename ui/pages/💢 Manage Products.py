@@ -12,7 +12,6 @@ import streamlit as st
 #from db.models import Product, ProductCreate, ProductShort, ProductRead, ProductUpdate
 ss = st.session_state
 ss.messages = list()
-ss
 
 # Helper function to fetch items from the database
 def get_products() -> List[dict]:   #Product]:
@@ -20,13 +19,6 @@ def get_products() -> List[dict]:   #Product]:
     if res.status_code == 200:
         return res.json()   #[Product(**x) for x in res.json()]
     return [{'Error': 'No products retrieved'}]
-    '''fake_products = [   
-            ProductCreate(id=997, name='Fake Candy Bar', price=0.75, emoji='🍫'),
-            ProductCreate(id=998, name='Slushie', price=1.00, emoji='🍦'),
-            ProductCreate(id=999, name='Soda', price=1.00, emoji='🥤'),
-            ProductCreate(id=996, name='Popcorn', price=0.50, emoji='🍿')
-        ]
-    return fake_products'''
 
 
 # Main section for interacting with Products
@@ -88,8 +80,7 @@ def main_form():
 
         edited_df = st.data_editor(df, key="my_products", column_config=cart_columns, num_rows='dynamic', use_container_width=True)
         if st.form_submit_button("Review Changes"):
-            ss.products = edited_df.to_dict('records')
-    #ss.my_products
+            pass    #ss.products = edited_df.to_dict('records')
     form2 = st.form('fm_review_product_changes', clear_on_submit=True, border=True)
     with form2:
         creates = ss.my_products.get('added_rows',list())
@@ -99,7 +90,6 @@ def main_form():
 
         updates = ss.my_products.get('edited_rows',list())
         st.write("To Update: ")
-        #Updates will be a little more complicated since they reference the order of the list
         delta_products = {str(df.iloc[row].loc['id']):prd  for row,prd in updates.items()}  #ProductUpdate(**cst)
         delta_products
 
@@ -107,14 +97,12 @@ def main_form():
         st.write("To Delete: ")
         trash_products = [str(df.iloc[row].loc['id']) for row in deletes]  #ProductUpdate(**cst)
         trash_products
-        ss.messages
+
         if st.form_submit_button("Process Changes"):
             for np in new_products: save_new_product(np)
             for key,dp in delta_products.items(): update_delta_product(key,dp)
             for key in trash_products: delete_product(key)
-            ss.messages
             ss.clear()
-
 
 if __name__ == "__main__":
     if 'ploaded' not in ss:

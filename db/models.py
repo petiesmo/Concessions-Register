@@ -24,7 +24,7 @@ class UUIDIDModel(BaseModel):
 
 
 class TimestampModel(BaseModel):
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.now)
     #updated_at: Optional[datetime] = Field(sa_column=Column(DateTime(), onupdate=func.now()), default=None)
     #Datetime stuff:  https://github.com/tiangolo/sqlmodel/issues/594
 
@@ -33,6 +33,10 @@ class EventTimestamp(BaseModel):
     occured_at: datetime | None
 
 
+def SKU_number():
+    #Creates unique SKU
+    #TODO: implement this
+    pass
 
 #--- BASE Class for SQLModel objects
 class BaseSQLModel(SQLModel, TimestampModel):
@@ -48,9 +52,10 @@ class BaseSQLModel(SQLModel, TimestampModel):
 #--- CUSTOMER class options ---
 class CustomerBase(SQLModel):
     name: str = Field(index=True, nullable=False)
-    badge_id: str | None = Field(index=True, default=None)
+    badge_id: str | None = Field(unique_items=True, index=True, default=None)
     acct_balance: float = Field(default=0.00, nullable=False)
     staff: bool = Field(index=True, nullable=False, default=False)
+    active: bool = Field(index=True, nullable=False, default=True)
 
     model_config = ConfigDict(arbitrary_types_allowed=True, str_strip_whitespace=True)
 
@@ -78,7 +83,7 @@ class CustomerShort(CustomerBase):
 
 #Update Ref: https://sqlmodel.tiangolo.com/tutorial/fastapi/update/
 class CustomerUpdate(SQLModel):
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.now)
     name: str | None = None
     badge_id: str | None = None
     staff: bool | None = None
@@ -102,7 +107,8 @@ class ProductBase(SQLModel):
 
 
 class ProductCreate(ProductBase):
-    qty: float = Field(default=0, nullable=False)
+    SKU: str = Field(unique_items=True, nullable=False, index=True)   #default_factory=SKU_number
+    qty: float = Field(default=0)
     description: str = Field(default='')
     emoji: str = Field(default='')
 
@@ -117,13 +123,15 @@ class ProductRead(ProductCreate):
 
 class ProductShort(ProductBase):
     id:int
+    SKU: str
     emoji: str
 
 
 class ProductUpdate(SQLModel):
-    updated_at: datetime = Field(default_factory=datetime.utcnow)    
+    updated_at: datetime = Field(default_factory=datetime.now)    
     name: str | None = None
     price: float | None = None
+    SKU: str | None = None
     description: str | None = None
     qty: float | None = None
     emoji: str | None = None
@@ -176,7 +184,7 @@ class TxShort(TxBase):
 
 
 class TxUpdate(SQLModel):
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.now)
     customer_id: Optional[int]
     items: Optional[List]
     total: Optional[float]

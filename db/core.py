@@ -13,7 +13,7 @@ env = dotenv_values('../.env')
 #--- Database
 DATABASE_URL = "mysql+pymysql://user2:password2@db/mydatabase"
 DATABASE_URL = env.get('DATABASE_URL', "sqlite:///./test_local.db")
-print(DATABASE_URL)
+print(f'Using db: {DATABASE_URL}')
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith('sqlite') else {}
 
 # Synchronous Engine and Session

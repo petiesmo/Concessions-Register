@@ -15,7 +15,7 @@ ss.messages = list()
 
 # Helper function to fetch items from the database
 def get_products() -> List[dict]:   #Product]:
-    res = httpx.get('http://localhost:8000/products/all')
+    res = httpx.get('http://fastapi_service:8000/products/all')
     if res.status_code == 200:
         return res.json()   #[Product(**x) for x in res.json()]
     return [{'Error': 'No products retrieved'}]
@@ -25,7 +25,7 @@ def get_products() -> List[dict]:   #Product]:
 def save_new_product(prod):     #ProductCreate):
     prod_dict = prod    #.model_dump()
     ss.messages.append(f'Submitting product data: {prod_dict}')
-    response = httpx.post("http://localhost:8000/products/", json=prod_dict)
+    response = httpx.post("http://fastapi_service:8000/products/", json=prod_dict)
     ss.messages.append(f'Server response: {response.json()}')
     if response.status_code == 201:
         st.toast(f'✅ New Product submitted successfully!')
@@ -36,7 +36,7 @@ def save_new_product(prod):     #ProductCreate):
 def update_delta_product(prod_id, prod_dict): #: ProductUpdate):
     #prod_dict = prod.model_dump()
     ss.messages.append(f'Submitting product data: {prod_dict}')
-    response = httpx.patch(f"http://localhost:8000/products/{prod_id}", json=prod_dict)
+    response = httpx.patch(f"http://fastapi_service:8000/products/{prod_id}", json=prod_dict)
     ss.messages.append(f'Server response: {response.json()}')
     if response.status_code == 200:
         st.toast(f'✅ Product {prod_id} changes submitted successfully!')
@@ -46,7 +46,7 @@ def update_delta_product(prod_id, prod_dict): #: ProductUpdate):
 
 def delete_product(prod_id): 
     ss.messages.append(f'Deleting product #: {prod_id}')
-    response = httpx.delete(f"http://localhost:8000/products/{prod_id}")
+    response = httpx.delete(f"http://fastapi_service:8000/products/{prod_id}")
     ss.messages.append(f'Server response: {response.status_code} | {response.json()}')
     if response.status_code == 200:
         st.toast(f'✅ Product {prod_id} changes submitted successfully!')

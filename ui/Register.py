@@ -30,7 +30,7 @@ if 'counter' not in st.session_state:
 # Helper functions to fetch customers from the database
 @st.cache_data
 def get_customers() -> List[dict]:
-    res = httpx.get('http://localhost:8000/customers/all')
+    res = httpx.get('http://fastapi_service:8000/customers/all')
     if res.status_code == 200:
         return res.json()   #[Customer(**x) for x in res.json()]
     return {'Error':'No customers retrieved'}
@@ -39,7 +39,7 @@ def get_customers() -> List[dict]:
 # Helper function to fetch items from the database
 @st.cache_data
 def get_products() -> List[dict]:
-    res = httpx.get('http://localhost:8000/products/all')
+    res = httpx.get('http://fastapi_service:8000/products/all')
     if res.status_code == 200:
         return res.json()   #[Product(**x) for x in res.json()]
     return {'Error':'No products retrieved'}
@@ -184,12 +184,15 @@ def Register_Section():
     tx_saved = False
     if cst and total > 0:
         if sum(payment.values()) == total:
+            #TODO: Allow negative balance for staff
             if total > cst['acct_balance']:
                 col2b.write("Insufficient Account Balance.  Add cash or reduce items.")
             else:
                 if col2b.button("Submit"):
+                    #Should map to TxCreate
                     tx_data = {         
                     'customer_id': cst['id'],
+                    'txtype': 1,
                     'total': total,
                     'cart': cart,
                     'pmt': payment,
@@ -202,7 +205,7 @@ def Register_Section():
 def save_transaction(tx): #TxCreate):
     tx_dict = tx    #.model_dump()
     st.write(f'Submitting tx data: {tx_dict}')
-    response = httpx.post("http://localhost:8000/tx/", json=tx_dict)
+    response = httpx.post("http://fastapi_service:8000/tx/", json=tx_dict)
     st.write(f'Server response: {response.json()}')
     if response.status_code == 201:
         st.toast(f'✅ Transaction submitted successfully!')
@@ -220,7 +223,6 @@ def clear_session_state_and_rerun():
 # Main function
 def main_form():    #customers:List[Customer], merch:List[Product]):
     st.title('💵 Concessions Cash Register')
-    
     # Select customer & Display customer details
     Customer_Section(ss.customers)
     st.divider()

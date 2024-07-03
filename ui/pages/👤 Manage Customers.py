@@ -14,7 +14,7 @@ ss = st.session_state
 
 # Helper functions to fetch customers from the database
 def get_customers() -> List[dict]:
-    res = httpx.get('http://localhost:8000/customers/all')
+    res = httpx.get('http://fastapi_service:8000/customers/all')
     if res.status_code == 200:
         return res.json()   #[Customer(**x) for x in res.json()]
     return [{'Error': 'No customers retrieved'}]
@@ -30,7 +30,7 @@ def get_customers() -> List[dict]:
 def save_new_customer(cst: dict):   #CustomerCreate):
     cst_dict = cst  #cst.model_dump()
     st.write(f'Submitting customer data: {cst_dict}')
-    response = httpx.post("http://localhost:8000/customers/", json=cst_dict)
+    response = httpx.post("http://fastapi_service:8000/customers/", json=cst_dict)
     st.write(f'Server response: {response.json()}')
     if response.status_code == 201:
         st.toast(f'✅ New Customer submitted successfully!')
@@ -41,7 +41,7 @@ def save_new_customer(cst: dict):   #CustomerCreate):
 def update_delta_customer(cst_id, cst_dict): #CustomerUpdate):
     #cst_dict = cst.model_dump()
     st.write(f'Submitting customer data: {cst_dict}')
-    response = httpx.patch(f"http://localhost:8000/customers/{cst_id}", json=cst_dict)
+    response = httpx.patch(f"http://fastapi_service:8000/customers/{cst_id}", json=cst_dict)
     st.write(f'Server response: {response.json()}')
     if response.status_code == 200:
         st.toast(f'✅ Customer {cst_id} changes submitted successfully!')
@@ -54,7 +54,7 @@ def update_delta_customer(cst_id, cst_dict): #CustomerUpdate):
 
 def delete_customer(cst_id): 
     st.write(f'Deleting product #: {cst_id}')
-    response = httpx.delete(f"http://localhost:8000/customers/{cst_id}")
+    response = httpx.delete(f"http://fastapi_service:8000/customers/{cst_id}")
     st.write(f'Server response: {response.status_code} | {response.json()}')
     if response.status_code == 200:
         st.toast(f'✅ Product {cst_id} changes submitted successfully!')

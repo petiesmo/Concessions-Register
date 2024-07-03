@@ -184,9 +184,7 @@ def Register_Section():
     tx_saved = False
     if cst and total > 0:
         if sum(payment.values()) == total:
-            if cst.total > cst['acct_balance']:
-                col2b.write("Insufficient Account Balance.  Add cash or reduce items.")
-            else:
+            if cst.allow_neg_balance and total <= cst['acct_balance']:
                 if col2b.button("Submit"):
                     #Should map to TxCreate
                     tx_data = {         
@@ -197,6 +195,8 @@ def Register_Section():
                     'note': tx_note
                     }
                     tx_saved = save_transaction(tx_data)
+            else:
+                col2b.write("Insufficient Account Balance.  Add cash or reduce items.")
     if col2b.button('RESET'): clear_session_state_and_rerun()
     return tx_saved
 

@@ -57,6 +57,7 @@ class CustomerBase(SQLModel):
     acct_balance: float = Field(default=0.00, nullable=False)
     staff: bool = Field(index=True, nullable=False, default=False)
     active: bool = Field(index=True, nullable=False, default=True)
+    allow_neg_balance: bool = Field(nullable=False, default=False)
 
     model_config = ConfigDict(arbitrary_types_allowed=True, str_strip_whitespace=True)
 

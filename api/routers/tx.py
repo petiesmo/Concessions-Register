@@ -9,10 +9,10 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.encoders import jsonable_encoder
 from sqlmodel import Session
 
-from ...db.models import Transaction, TxCreate, TxUpdate, TxShort 
-from ...db.models import Customer, CustomerUpdate
-from ...db.core import get_session
-from ...db.db_ops import CRUDBase
+from db.models import Transaction, TxCreate, TxUpdate, TxShort 
+from db.models import Customer, CustomerUpdate
+from db.core import get_session
+from db.db_ops import CRUDBase
 
 items = CRUDBase(Transaction)
 customers = CRUDBase(Customer)

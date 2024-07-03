@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import HTMLResponse, JSONResponse
 from sqlmodel import Session
 
-from ...db.models import Product, ProductCreate, ProductRead, ProductUpdate, ProductShort
-from ...db.core import get_session
-from ...db.db_ops import CRUDBase
+from db.models import Product, ProductCreate, ProductRead, ProductUpdate, ProductShort
+from db.core import get_session
+from db.db_ops import CRUDBase
 
 items = CRUDBase(Product)
 router = APIRouter(

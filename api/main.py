@@ -4,8 +4,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 
-from .routers import tx, products, customers
-from ..db.core import create_db_and_tables
+from routers import tx, products, customers
+from db.core import create_db_and_tables
   
 
 #from slowapi import Limiter, _rate_limit_exceeded_handler

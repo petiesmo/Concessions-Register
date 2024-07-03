@@ -1,6 +1,7 @@
 # Local folders
 .archive/
 .data/
+/db_data
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

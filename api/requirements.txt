@@ -1,0 +1,13 @@
+aiomysql
+fastapi
+fastapi-users[sqlalchemy2]
+httpx
+pydantic
+pydantic[email]
+pydantic-settings
+pytest
+python-dotenv
+python-multipart
+slowapi
+sqlmodel
+uvicorn

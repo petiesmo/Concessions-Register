@@ -2,6 +2,7 @@
 #Good template: can be replicated for other item types
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from typing import List, Dict, Optional, Any
 from uuid import uuid4
 
@@ -155,9 +156,15 @@ class LineItem(BaseModel):
 
 
 #--- TX = Transaction (generic) Class Options 
+class TxType(Enum):
+    PURCHASE = 1
+    CASH_INOUT = 2
+    ADJ_BAL = 3
+
 class TxBase(SQLModel):
     customer_id: int | None = Field(default=None, foreign_key='customer.id')
     total: float = Field(default=0.00)
+    txtype: TxType = Field(default=TxType.PURCHASE)
 
     model_config = ConfigDict(arbitrary_types_allowed=True, str_strip_whitespace=True)
 

@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.encoders import jsonable_encoder
 from sqlmodel import Session
 
-from db.models import Transaction, TxCreate, TxUpdate, TxShort 
+from db.models import Transaction, TxCreate, TxUpdate, TxShort, TxType 
 from db.models import Customer, CustomerUpdate
 from db.core import get_session
 from db.db_ops import CRUDBase
@@ -33,13 +33,14 @@ def return_html_form():
 
 
 #-- CREATE
-@router.post("/")
-def create_item(data: TxCreate, session: Session = Depends(get_session)):
+@router.post("/{txtype}")
+def create_item(txtype:TxType, data: TxCreate, session: Session = Depends(get_session)):
     '''Create a new transaction AND update customer balance accordingly'''
     try:
         # Create the transaction
         tx_dict = data.model_dump()
         print(f'Received new tx: {tx_dict}')
+        tx_dict['txtype'] = txtype
         item = items.create_one(session, tx_dict)
 
         # Fetch the associated customer
@@ -48,7 +49,11 @@ def create_item(data: TxCreate, session: Session = Depends(get_session)):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
         
         # Update the customer's balance
-        new_balance = round(customer.acct_balance - data.pmt.account, 2)  # Adjust the balance by the payment applied to the account
+        if txtype == TxType.PURCHASE:
+            new_balance = round(customer.acct_balance - data.pmt.account, 2)  # Adjust the balance by the payment applied to the account
+        else:
+            new_balance = round(customer.acct_balance + data.pmt.cash + data.pmt.account, 2)  # Adjust the balance by the cash or acct adjustments
+        
         customer_update = CustomerUpdate(acct_balance=new_balance)
         customers.update_one(session, customer.id, customer_update)
         

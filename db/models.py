@@ -90,6 +90,9 @@ class CustomerUpdate(SQLModel):
     badge_id: str | None = None
     staff: bool | None = None
     acct_balance: float | None = None
+    active: bool | None = None
+    allow_neg_balance: bool | None = None
+
 
 
 

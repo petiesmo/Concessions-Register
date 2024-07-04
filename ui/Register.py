@@ -54,7 +54,7 @@ def select_customer(customers):
     selected_customer = st.selectbox(
         label="Customer (type to search)",
         key="session_customer",
-        options=customers,
+        options=[cst for cst in customers if cst['active']],
         index=None,
         placeholder='Select/Search a Customer',
         format_func=format_customer,
@@ -162,7 +162,7 @@ def Register_Section():
         ss.cart = list()
     cart = ss.cart
     cst = ss.customer
-
+    
     #Layout
     col1, col2 = st.columns(2, gap='medium')
     with col1:
@@ -184,7 +184,7 @@ def Register_Section():
     tx_saved = False
     if cst and total > 0:
         if sum(payment.values()) == total:
-            if cst.allow_neg_balance and total <= cst['acct_balance']:
+            if total <= cst['acct_balance'] or (total > cst['acct_balance'] and cst['allow_neg_balance']):
                 if col2b.button("Submit"):
                     #Should map to TxCreate
                     tx_data = {         

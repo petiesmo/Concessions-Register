@@ -84,7 +84,8 @@ def main_form():
             'badge_id': st.column_config.TextColumn("Badge"),
             'acct_balance': st.column_config.NumberColumn("Balance", min_value=0, format='$%.2f'),
             'staff': st.column_config.CheckboxColumn('Is Staff', default=False),
-            'active': st.column_config.CheckboxColumn('Active', default=False)
+            'active': st.column_config.CheckboxColumn('Active', default=True),
+            'allow_neg_balance': st.column_config.CheckboxColumn('Allow Credit', default=False)
         }
         edited_df = st.data_editor(df, key="my_customers", column_config=cart_columns, num_rows='dynamic', use_container_width=True)
         if st.form_submit_button("Review Changes"):

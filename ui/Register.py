@@ -189,6 +189,7 @@ def Register_Section():
                     #Should map to TxCreate
                     tx_data = {         
                     'customer_id': cst['id'],
+                    'txtype': 1,
                     'total': total,
                     'cart': cart,
                     'pmt': payment,
@@ -203,7 +204,7 @@ def Register_Section():
 def save_transaction(tx): #TxCreate):
     tx_dict = tx    #.model_dump()
     st.write(f'Submitting tx data: {tx_dict}')
-    response = httpx.post("http://fastapi_service:8000/tx/1", json=tx_dict) #1 = PURCHASE
+    response = httpx.post(f"http://fastapi_service:8000/tx/", json=tx_dict) #1 = PURCHASE
     st.write(f'Server response: {response.json()}')
     if response.status_code == 201:
         st.toast(f'✅ Transaction submitted successfully!')

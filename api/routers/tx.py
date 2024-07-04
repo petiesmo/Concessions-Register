@@ -33,14 +33,13 @@ def return_html_form():
 
 
 #-- CREATE
-@router.post("/{txtype}")
-def create_item(txtype:TxType, data: TxCreate, session: Session = Depends(get_session)):
+@router.post("/")
+def create_item(data: TxCreate, session: Session = Depends(get_session)):
     '''Create a new transaction AND update customer balance accordingly'''
     try:
         # Create the transaction
         tx_dict = data.model_dump()
         print(f'Received new tx: {tx_dict}')
-        tx_dict['txtype'] = txtype
         item = items.create_one(session, tx_dict)
 
         # Fetch the associated customer
@@ -49,7 +48,7 @@ def create_item(txtype:TxType, data: TxCreate, session: Session = Depends(get_se
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
         
         # Update the customer's balance
-        if txtype == TxType.PURCHASE:
+        if data.txtype == TxType.PURCHASE:
             new_balance = round(customer.acct_balance - data.pmt.account, 2)  # Adjust the balance by the payment applied to the account
         else:
             new_balance = round(customer.acct_balance + data.pmt.cash + data.pmt.account, 2)  # Adjust the balance by the cash or acct adjustments

@@ -46,9 +46,11 @@ def manual_adjust_form() -> dict:  #Payment:
         tx_data
         if st.form_submit_button('Make Adjustment'):
             if reason == 0:
-                save_transaction(tx_data, 2)
+                tx_data.update({'txtype':2})
+                save_transaction(tx_data)
             else:
-                save_transaction(tx_data, 3)
+                tx_data.update({'txtype':3})
+                save_transaction(tx_data)
     return 
    #Payment(cash=cash, coupon=coupon, account=acct)
 
@@ -113,6 +115,7 @@ def main_form():
             for cid,abal in delta_customers.items():
                 account_actions.append ({         
                 'customer_id': cid,
+                'txtype': 3,
                 'total': -abal,
                 'pmt': {'account': -abal},
                 'note': note
@@ -120,6 +123,7 @@ def main_form():
             #Record closeout
             account_actions.append ({         
                 'customer_id': 999,
+                'txtype':3,
                 'total': 0,
                 'pmt': account_action,
                 'note': f'{delta_customers.keys()}'

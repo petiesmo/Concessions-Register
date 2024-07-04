@@ -32,7 +32,7 @@ def select_customers(customers):
 
 def manual_adjust_form() -> dict:  #Payment:
     with st.form('ManualAdj', clear_on_submit=True, border=True):
-        customer = st.selectbox('Select Customer', ss.customers)
+        customer = st.selectbox('Select Customer', ss.customers, format_func=format_customer)
         acct_adjust = st.number_input("Adjust Account +/-", value=0.00)
         reason = st.selectbox('Reason', ['Cash In/Out', 'Correction'])
         note = st.text_input("Manager Name & Note", value='')
@@ -43,6 +43,12 @@ def manual_adjust_form() -> dict:  #Payment:
             'pmt': {'account': acct_adjust},
             'note': f'{reason} | {note}'
             }
+        if st.form_submit_button('Review Account Actions'):
+            pass
+
+    form2 = st.form('fm_review_account_actions', clear_on_submit=True, border=True)
+    with form2:
+        st.write("To Update: ")
         tx_data
         if st.form_submit_button('Make Adjustment'):
             if reason == 0:
@@ -88,7 +94,10 @@ def formatted_balance(bal):
 # Main function
 def main_form():
     st.title('💵 Account Closeout')
+    with st.popover('Manual Acct Adjust'):
+        line_item = manual_adjust_form()
     ss.cst = select_customers(ss.customers)
+    
     st.divider()
 
     "Selected Customers Details:"
@@ -131,8 +140,16 @@ def main_form():
             account_actions
             if st.form_submit_button('Review Account Actions'):
                 for aa in account_actions:
-                    save_transaction(aa, 3)
+                    save_transaction(aa)
 
+    if st.button('RESET'): clear_session_state_and_rerun()
+
+
+def clear_session_state_and_rerun():
+    # Delete all the items in Session state
+    get_customers.clear()
+    ss.clear()
+    st.rerun()
 
 if __name__ == "__main__":
     # Get items from the database

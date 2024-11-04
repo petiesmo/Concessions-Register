@@ -39,7 +39,7 @@ def create_item(data: CustomerCreate, session:Session = Depends(get_session)):
 
 #-- READ
 @router.get("/all", response_model=List[CustomerShort])
-def read_items(offset: int=0, limit: int=Query(default=100, le=100), session:Session = Depends(get_session)):
+def read_items(offset: int=0, limit: int=Query(default=1000, le=1000), session:Session = Depends(get_session)):
     records = items.read_all(session, offset, limit)
     return records
 
@@ -62,6 +62,19 @@ def update_item(item_id: int, data: CustomerUpdate, session:Session = Depends(ge
         updated_item = items.update_one(session, item_id, data)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from e
+    return updated_item
+
+@router.patch("/closeout/{item_id}", response_model=CustomerShort)
+def closeout_customer(item_id: int, session:Session = Depends(get_session)):
+    try:
+        item = items.read_one(session, item_id)
+        print(f'{item=}')
+        if item.acct_balance != 0:
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={'message': f'Customer [{item.id}] {item.name} account balance is {item.acct_balance}.  Must be Zero to close out'})
+        data = CustomerUpdate(id=item_id, active=False)
+        updated_item = items.update_one(session, item_id, data)
+    except Exception as e:
+        raise HTTPException(e, status_code=status.HTTP_400_BAD_REQUEST) from e
     return updated_item
 
 

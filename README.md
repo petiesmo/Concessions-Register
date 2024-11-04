@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Concessions Cash Register app
 
  Designed for applications where no internet exists.
@@ -15,7 +14,3 @@
  Register: to create transactions
  Customers: to manage Customer data details
  Products: to manage Product data details
-=======
-# Concessions-Register
-Cash Register &amp; Account manager for remote concessions/canteen
->>>>>>> 614e66bc7d244a02cfb645c5ef377838de5211bc

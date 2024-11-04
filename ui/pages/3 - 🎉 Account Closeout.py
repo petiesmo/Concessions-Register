@@ -1,3 +1,4 @@
+from copy import deepcopy
 import httpx
 import pandas as pd
 import streamlit as st
@@ -30,6 +31,12 @@ def select_customers(customers):
         on_change=cbk)
     return selected_customers
 
+def get_one_customer(cst_id):
+    res = httpx.get(f'http://fastapi_service:8000/customers/{cst_id}')
+    if res.status_code == 200:
+        return res.json()
+    return [{'Error':f'Id {cst_id} not retrieved'}]
+
 def manual_adjust_form() -> dict:  #Payment:
     with st.form('ManualAdj', clear_on_submit=True, border=True):
         customer = st.selectbox('Select Customer', ss.customers, format_func=format_customer)
@@ -46,17 +53,23 @@ def manual_adjust_form() -> dict:  #Payment:
         if st.form_submit_button('Review Account Actions'):
             pass
 
-    form2 = st.form('fm_review_account_actions', clear_on_submit=True, border=True)
-    with form2:
+    with st.form('fm_review_account_actions', clear_on_submit=True, border=True):
+        updates = list()
+        if reason == "Cash In/Out":		#0 = Cash in/out
+            tx_data.update({'txtype':2})
+            cbox_data = deepcopy(tx_data)
+            cbox_data.update({'customer_id':2}) #Cash Box = 2
+            updates.append(tx_data)
+            updates.append(cbox_data)
+        else:
+            tx_data.update({'txtype':3})
+            updates.append(tx_data)
         st.write("To Update: ")
-        tx_data
+        updates
         if st.form_submit_button('Make Adjustment'):
-            if reason == 0:
-                tx_data.update({'txtype':2})
-                save_transaction(tx_data)
-            else:
-                tx_data.update({'txtype':3})
-                save_transaction(tx_data)
+            for udata in updates:
+                save_transaction(udata)
+            clear_session_state_and_rerun()
     return 
    #Payment(cash=cash, coupon=coupon, account=acct)
 
@@ -65,24 +78,34 @@ def closing_options(group_total:float) -> dict:  #Payment:
     cash_back = st.number_input("Cash Back (to customer)", min_value=0.00, value=0.00)
     to_donate = st.number_input("Donate (to camp)", min_value=0.00, value=0.00)
     from_donations = st.number_input("From Donations (to customer)", min_value=0.00, value=0.00)
-    adj_total = cash_in-cash_back+from_donations-to_donate
-    st.write(f'Adjustment Total: ${adj_total:.2f}')
-    st.write(f'Difference: ${group_total-adj_total:.2f}')
-    return {'cash':cash_in-cash_back,
-            'coupon':from_donations-to_donate,
-            'account':adj_total}
+    cst_adj_total = cash_in-cash_back+from_donations-to_donate
+    st.write(f'Customer Adjustment Total: ${cst_adj_total:.2f}')
+    st.write(f'Difference: ${cst_adj_total+group_total:.2f}')
+    return {'net_cash':cash_in-cash_back,
+            'net_donate':to_donate-from_donations,
+            'net_total':cst_adj_total}
    #Payment(cash=cash, coupon=coupon, account=acct)
 
 # Closeout each person in record
-def save_transaction(tx, txtype): #TxCreate):
+def save_transaction(tx): #TxCreate):
     tx_dict = tx    
     st.write(f'Submitting tx data: {tx_dict}')
-    response = httpx.post(f"http://fastapi_service:8000/tx/{txtype}", json=tx_dict)
+    response = httpx.post(f"http://fastapi_service:8000/tx/", json=tx_dict)
     st.write(f'Server response: {response.json()}')
     if response.status_code == 201:
         st.toast(f'✅ Transaction submitted successfully!')
         return True
     st.toast(f'❌ Failed to submit transaction. {response.status_code} | {response.text}')
+    return False
+
+def closeout_customer(cst_id):
+    st.write(f'Closing out customer {cst_id}')
+    response = httpx.patch(f"http://fastapi_service:8000/customers/closeout/{cst_id}")
+    st.write(f'Server response: {response.json()}')
+    if response.status_code in [200,201]:
+        st.toast(f'✅ Customer Closed out successfully!')
+        return True
+    st.toast(f'❌ Failed to closeout customer. {response.status_code} | {response.text}')
     return False
 
 def formatted_balance(bal):
@@ -94,56 +117,82 @@ def formatted_balance(bal):
 # Main function
 def main_form():
     st.title('💵 Account Closeout')
-    with st.popover('Manual Acct Adjust'):
+    col1,col2 = st.columns(2)
+    with col1.popover('Manual Acct Adjust'):
         line_item = manual_adjust_form()
-    ss.cst = select_customers(ss.customers)
+    if col2.button('RESET'): clear_session_state_and_rerun()
+
+    st.divider()
+    ss.cst_group = select_customers(ss.customers)
     
     st.divider()
 
     "Selected Customers Details:"
-    if ss.cst:
-        df = pd.DataFrame(ss.cst)
-        df
-        group_total = round((df.acct_balance).sum(),2)
+    if ss.cst_group:
+        df_group = pd.DataFrame(ss.cst_group)
+        df_group
+        group_total = round((df_group.acct_balance).sum(),2)
         st.write(f"Group Total: {formatted_balance(group_total)}")
     
+        with st.expander('Transactions Details (click to expand)'):
+            combined_tx =  list()
+            for cst in ss.cst_group:
+                cst_detail = get_one_customer(cst['id'])
+                combined_tx.extend(cst_detail['transactions'])
+            df_tx_detail = pd.DataFrame(combined_tx)
+            df_tx_detail['cart2'] = df_tx_detail['cart'].apply(lambda cart: ' | '.join([i['name'] for i in cart]))
+            st.dataframe(df_tx_detail[['id','customer_id','total','note','cart2']], use_container_width=True)
+
         form1 = st.form('fm_balance_options', clear_on_submit=True, border=True)
         with form1:
-            account_action = closing_options(group_total)
+            ss.net_action = closing_options(group_total)
             note = st.text_input("Reason", value='')
 
             if st.form_submit_button('Review Account Actions'):
                 pass
 
-        form2 = st.form('fm_review_account_actions', clear_on_submit=True, border=True)
+        form2 = st.form('fm_review_account_actions2', clear_on_submit=True, border=True)
         with form2:
             st.write("To Update: ")
-            delta_customers = {cid:abal for cid,abal in df[['id','acct_balance']].itertuples(index=False)}
-            
+            delta_customers = {cid:abal for cid,abal in df_group[['id','acct_balance']].itertuples(index=False)}
+            net_donation = ss.net_action.get('net_donate',0)
+            pmt_donation = {'account':net_donation}
+            net_cash = ss.net_action.get('net_cash',0)
+            pmt_cash = {'account':net_cash}
             account_actions = list()
             for cid,abal in delta_customers.items():
+                #Adjust each customer in the group to acct_balance 0
                 account_actions.append ({         
                 'customer_id': cid,
-                'txtype': 3,
+                'txtype': 4,	#4=Closeout
                 'total': -abal,
                 'pmt': {'account': -abal},
-                'note': note
+                'note': f'Closeout | {note}'
                 })
-            #Record closeout
-            account_actions.append ({         
-                'customer_id': 999,
+            #Record closeout in donations (id=1) and cashbox in/out (id=2)
+            if net_donation != 0:
+                account_actions.append ({         
+                'customer_id': 1,
                 'txtype':3,
-                'total': 0,
-                'pmt': account_action,
-                'note': f'{delta_customers.keys()}'
+                'total': net_donation,
+                'pmt': pmt_donation,
+                'note': f"Closeout | {note} | Cash In/Out: {net_cash} | Donated: {net_donation} | ids: {list(delta_customers.keys())}"
                 })
+            if net_cash != 0:
+                account_actions.append ({         
+                'customer_id': 2,
+                'txtype':2,
+                'total': net_cash,
+                'pmt': pmt_cash,
+                'note': f"Closeout | {note} | Cash In/Out: {net_cash} | Donated: {net_donation} | ids: {list(delta_customers.keys())}"
+                })
+
             account_actions
-            if st.form_submit_button('Review Account Actions'):
+            if st.form_submit_button('Submit Account Actions'):
                 for aa in account_actions:
                     save_transaction(aa)
-
-    if st.button('RESET'): clear_session_state_and_rerun()
-
+                for cid in delta_customers.keys():
+                    closeout_customer(cid)
 
 def clear_session_state_and_rerun():
     # Delete all the items in Session state
@@ -165,7 +214,7 @@ X Reconciled Balance(Cash In/Out, Donate In/Out)
 
 X Record Transaction 
 X Update Customer(s) Balances to Zero
-Update Customer(s) to 'Active' = False
+X Update Customer(s) to 'Active' = False
 
 Bonus: 
 Update "Till" (Cash in/out & Donations in/out)

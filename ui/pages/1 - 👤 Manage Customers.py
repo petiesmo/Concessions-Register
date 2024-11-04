@@ -25,6 +25,12 @@ def get_customers() -> List[dict]:
     ]
     return fake_customers'''
 
+# Helper functions to fetch customers from the database
+def get_one_customer(cst_id):
+    res = httpx.get(f'http://fastapi_service:8000/customers/{cst_id}')
+    if res.status_code == 200:
+        return res.json()   #Customer(**res.json())
+    return [{'Error': 'No customers retrieved'}]
 
 # Main section for displaying customers
 def save_new_customer(cst: dict):   #CustomerCreate):
@@ -112,7 +118,22 @@ def main_form():
             for cid,dc in delta_customers.items(): update_delta_customer(cid,dc)
             for cid in gone_customers: delete_customer(cid)
             ss.clear()
+    #Display full record for 1 customer
+    cst_select = st.selectbox(label="Select One Customer", options=ss.customers, format_func=cst_format)
+    cst_detail = get_one_customer(cst_select['id'])
+    st.dataframe(pd.json_normalize(cst_detail))
+    st.write('Transactions')
+    details = pd.json_normalize(cst_detail['transactions'], max_level=3)
+    details['cart2'] = details['cart'].apply(lambda cart: ' | '.join([item.get('name','') for item in cart]))
+    st.dataframe(details[['id','created_at','total','cart2','note']], use_container_width=True)
     
+
+def cart_format(cart):
+    items = [item.get('name','') for item in cart]
+    return " | ".join(items)
+
+def cst_format(cst):
+    return f"{cst['badge_id']} | {cst['name']}"
 
 if __name__ == "__main__":
     if 'cloaded' not in ss:

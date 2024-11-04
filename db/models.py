@@ -164,6 +164,7 @@ class TxType(Enum):
     PURCHASE = 1
     CASH_INOUT = 2
     ADJ_BAL = 3
+    CLOSEOUT = 4
 
 class TxBase(SQLModel):
     customer_id: int | None = Field(default=None, foreign_key='customer.id')
